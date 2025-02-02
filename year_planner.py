@@ -4,10 +4,6 @@ from tkcalendar import Calendar
 import json
 import os
 from PIL import Image
-import threading
-import subprocess
-import sys
-import time
 from datetime import datetime, date
 import webbrowser
 import tempfile
@@ -34,10 +30,6 @@ create_blank_ico(ICON_PATH)
 
 # Initialize tasks data structure
 tasks_data = {}
-
-# Timer variables
-timer_enabled = False  # Global state variable for the timer
-timer_duration = 1  # Default timer duration (1 hour)
 
 def inputError(task):
     """Validate that the task input is not empty."""
@@ -271,45 +263,10 @@ def clear_all_tasks():
     else:
         messagebox.showinfo("No Tasks", "There are no tasks to clear for the selected date.")
 
-def restart_script():
-    """Restart the script after a delay."""
-    print(f"Timer activated. Restarting in {timer_duration} hour(s).")
-    time.sleep(timer_duration * 3600)  # Delay for the selected number of hours
-    subprocess.Popen([sys.executable] + sys.argv)
-    print("Application restarted.")
-    sys.exit()
-
 def exit_and_restart():
-    """Exit the application and restart if timer is enabled."""
+    """Exit the application."""
     save_tasks()
-    if timer_enabled:
-        threading.Thread(target=restart_script, daemon=True).start()
     gui.quit()
-
-def toggle_timer():
-    """Toggle the timer on or off."""
-    global timer_enabled
-    timer_enabled = not timer_enabled
-    toggle_button.config(text="Timer On" if timer_enabled else "Timer Off")
-    print(f"Timer toggled to {'On' if timer_enabled else 'Off'}.")
-
-def update_timer_duration(event):
-    """Update the timer duration based on user selection."""
-    global timer_duration
-    selection = timer_dropdown.get().lower()
-    if "second" in selection:
-        try:
-            seconds = int(selection.split()[0])
-            timer_duration = seconds / 3600  # Convert seconds to hours
-            print(f"Timer duration set to {timer_duration} hour(s) based on selection '{selection}'.")
-        except ValueError:
-            messagebox.showerror("Input Error", "Invalid timer duration selected.")
-    else:
-        try:
-            timer_duration = int(selection.split()[0])  # Extract the number of hours from the selection
-            print(f"Timer duration set to {timer_duration} hour(s) based on selection '{selection}'.")
-        except ValueError:
-            messagebox.showerror("Input Error", "Invalid timer duration selected.")
 
 def show_tasks_html():
     """
@@ -717,34 +674,17 @@ if __name__ == "__main__":
     button_frame = tk.Frame(scrollable_frame, bg="#f0f0f0")
     button_frame.pack(pady=5, padx=5, fill='x')  # Adjust as needed
 
-    # Configure button frame to expand
+    # Configure button frame to expand (using two columns now)
     button_frame.grid_columnconfigure(0, weight=1)
     button_frame.grid_columnconfigure(1, weight=1)
-    button_frame.grid_columnconfigure(2, weight=1)
-    button_frame.grid_columnconfigure(3, weight=1)
-    button_frame.grid_columnconfigure(4, weight=1)  # Added for the 'Tasks' button
 
     # Exit button
     exitButton = ttk.Button(button_frame, text="Exit", style="Custom.TButton", command=exit_and_restart)
-    exitButton.grid(row=0, column=0, padx=2, sticky=tk.EW)  # Adjust padding as needed
-
-    # Toggle timer button
-    toggle_button = ttk.Button(button_frame, text="Timer Off", style="Custom.TButton", command=toggle_timer)
-    toggle_button.grid(row=0, column=1, padx=2, sticky=tk.EW)  # Adjust padding as needed
-
-    # Timer duration dropdown
-    timer_label = tk.Label(button_frame, text="Timer Duration:", **widget_style)
-    timer_label.grid(row=0, column=2, padx=(10,2), sticky=tk.E)  # Adjust padding as needed
-
-    timer_options = ["1 hour", "2 hours", "3 hours", "4 hours", "5 hours", "6 hours", "5 seconds"]
-    timer_dropdown = ttk.Combobox(button_frame, values=timer_options, state="readonly", width=10, font=("Arial", 10))
-    timer_dropdown.current(0)  # Set default selection to 1 hour
-    timer_dropdown.grid(row=0, column=3, padx=2, sticky=tk.EW)  # Adjust padding as needed
-    timer_dropdown.bind("<<ComboboxSelected>>", update_timer_duration)
+    exitButton.grid(row=0, column=0, padx=2, sticky=tk.EW)
 
     # Tasks button
     tasksButton = ttk.Button(button_frame, text="Tasks", style="Custom.TButton", command=show_tasks_html)
-    tasksButton.grid(row=0, column=4, padx=2, sticky=tk.EW)  # Adjust column and padding as needed
+    tasksButton.grid(row=0, column=1, padx=2, sticky=tk.EW)
 
     # Set the blank icon to the Tkinter window
     try:
